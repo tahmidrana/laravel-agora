@@ -37,6 +37,11 @@ class AgoraVideoController extends Controller
 
     public function token (Request $request)
     {
+        $request->validate([
+            'channelName' => 'string|required',
+            'uid' => 'integer|min:0|nullable'
+        ]);
+
         $appID = env('AGORA_APP_ID');
         $appCertificate = env('AGORA_APP_CERTIFICATE');
         $channelName = $request->channelName;
@@ -45,10 +50,17 @@ class AgoraVideoController extends Controller
         $expireTimeInSeconds = 3600;
         $currentTimestamp = now()->getTimestamp();
         $privilegeExpiredTs = $currentTimestamp + $expireTimeInSeconds;
+        $uid = $request->uid ?? rand(9, 99999);
 
-        $token = RtcTokenBuilder::buildTokenWithUserAccount($appID, $appCertificate, $channelName, $user, $role, $privilegeExpiredTs);
+        // $token = RtcTokenBuilder::buildTokenWithUserAccount($appID, $appCertificate, $channelName, $user, $role, $privilegeExpiredTs);
+        $token = RtcTokenBuilder::buildTokenWithUid($appID, $appCertificate, $channelName, $uid, $role, $privilegeExpiredTs);
 
-        return $token;
+        return response()->json([
+            'appID' => $appID, 
+            'channelName' => $channelName, 
+            'token' => $token, 
+            'uid' => $uid
+        ]);
     }
 
     public function callUser (Request $request)
